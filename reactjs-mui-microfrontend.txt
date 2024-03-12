@@ -1,0 +1,116 @@
+
+Creating a microfrontend React app with Material-UI and TypeScript involves setting up multiple projects and using a module federation system to share components between them. Below is a simple example with two microfrontend apps: container and subapp. The container will import and render the Button component from subapp.
+
+npx create-react-app container --template typescript
+cd container
+
+npm install react-router-dom @material-ui/core @material-ui/icons
+npm install --save-dev @types/react-router-dom
+
+// src/App.tsx
+import React from 'react';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+
+const Home = React.lazy(() => import('subapp/Home'));
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <div>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+          </ul>
+        </nav>
+
+        <hr />
+
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <Route path="/" exact component={Home} />
+        </React.Suspense>
+      </div>
+    </Router>
+  );
+};
+
+export default App;
+
+
+
+Step 2: Create the Subapp
+Create a new React app for the subapp:
+
+
+npx create-react-app subapp --template typescript
+cd subapp
+
+
+npm install @material-ui/core @material-ui/icons
+
+// src/Home.tsx
+import React from 'react';
+import Button from '@material-ui/core/Button';
+
+const Home: React.FC = () => {
+  return (
+    <div>
+      <h2>Home</h2>
+      <Button variant="contained" color="primary">
+        Material-UI Button
+      </Button>
+    </div>
+  );
+};
+
+export default Home;
+
+npm install @module-federation/nextjs-mf
+
+
+Update the container app's package.json:
+{
+  // ...
+  "scripts": {
+    // ...
+    "start": "next dev",
+    // ...
+  },
+  "dependencies": {
+    // ...
+    "subapp": "http://localhost:3001/_next/static/chunks/remoteEntry.js"
+  },
+  "federated": {
+    "type": "nextjs"
+  }
+}
+
+Update the subapp app's package.json:
+
+{
+  // ...
+  "scripts": {
+    // ...
+    "start": "next dev",
+    // ...
+  },
+  "federated": {
+    "type": "nextjs",
+    "name": "subapp",
+    "filename": "static/chunks/remoteEntry.js",
+    "exposes": {
+      "./Home": "./src/Home"
+    }
+  }
+}
+
+
+Step 4: Run the Apps
+In separate terminals, run the container and subapp:
+
+npm start
+
+Visit http://localhost:3000 in your browser to see the container app. It should import and render the Button component from the subapp.
+
+This is a basic example to get you started. Depending on your project structure and requirements, you may need to adjust the configurations and build processes. Additionally, you can extend this architecture with more microfrontend apps as needed.
